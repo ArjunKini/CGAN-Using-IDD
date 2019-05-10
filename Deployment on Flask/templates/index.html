@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="cache-control" content="no-cache" />
+	<meta http-equiv="Pragma" content="no-cache" />
+	<meta http-equiv="Expires" content="-1" />
+	<title>SceneGen</title>
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/style.css') }}">
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+
+	<script type="text/javascript" src="{{ url_for('static', filename='js/jquery-3.3.1.min.js') }}"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='js/interact.min.js') }}"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='js/jquery.min.js') }}"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='js/html2canvas.js') }}"></script>
+	<script type="text/javascript" src="{{ url_for('static', filename='js/canvas2image.js') }}"></script>
+
+
+</head>
+<body class="container" style="background-color: #ddd;" id="body">
+	<h1 class="text-center">Scene Generation using GAN</h1>
+	<br/>
+	<div class="container" style="background-color: #eee; padding:0 50px 50px 50px;">
+        <div class="row">
+            <div class="col-sm-6">
+                <div class="text-center"><h2>Semantic Scene</h2></div>
+            </div>
+            <div class="col-sm-6">
+                <div class="text-center"><h2>Generated Scene</h2></div>
+            </div>
+        </div>
+		<div class="row">
+			<div class="col-sm-6">
+				<div class="cnv-bdr"><div id="capture" class="canvas resize-container"></div></div>
+			</div>
+			<div class="col-sm-6">
+				<div id="img-out"></div>
+			</div>
+		</div>
+		<div>
+				<input style="margin: 0 auto;" type="button" id="btnSave" class="btn btn-primary btn-lg" value="Generate"/>
+		</div>
+		<div class="masthead">
+	        <h3 class="text-muted">Elements</h3>
+	        <nav class="navbar navbar-inverse">
+	          	<ul class="nav nav-tabs nav-justified" id="myTabs" role="tablist">
+		            <li role="presentation">
+		            	<a id="auto-tab" href="#" role="tab" data-toggle="tab">Auto</a>
+		            </li>
+		            <li role="presentation">
+		            	<a id="bike-tab" href="#" role="tab" data-toggle="tab">Bike</a>
+		            </li>
+		            <li role="presentation">
+		            	<a id="car-tab" href="#" role="tab" data-toggle="tab">Car</a>
+		            </li>
+		            <li role="presentation">
+		            	<a id="person-tab" href="#" role="tab" data-toggle="tab">Person</a>
+		            </li>
+		            <li role="presentation">
+		            	<a id="tree-tab" href="#" role="tab" data-toggle="tab">Tree</a>
+		            </li>
+	        	</ul>
+	        </nav>
+	     </div>
+		<div class="toolbar"><span></span></div>
+		<br/>
+	</div>
+	<script type="text/javascript">
+		$(document).ready(function() {
+			$(function() {
+
+			    $("#btnSave").click(function() {
+			        html2canvas(document.querySelector("#capture")).then(canvas => {
+                            //variable for ajax and getting base64 string
+    						server = "http://127.0.0.1:5000";
+    						appdir = "/img"
+			                theCanvas = canvas;
+			                $("#img-out").html("");
+			                $("#img-out").append(canvas);
+			        		$("#img-out canvas").attr("id","mcanvas");
+			        		var canvas = document.getElementById("mcanvas");
+							image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
+							$("#img-out").html("");
+
+                            //sending base64 string to flask using ajax
+							$.ajax({
+								type: "POST",
+								url: server+appdir,
+								data: image,
+								dataType: 'imgData'
+
+							}).done(function(data){
+									console.log(data);
+
+							}).fail(function(data){
+								console.log(data);
+                                $("#img-out").html("");
+								$("#img-out").append("<img id='theImg' src='"+ data.responseText +"' style='height: auto !important; width: auto !important; border: 15px grey solid; display: inline-block; margin: 0 auto;'/>");
+							});
+			        });
+
+			    });
+			});
+		});
+$(document).ready(function () {
+    var $o, os;
+    var toolSelect;
+    //random background image
+    var imageUrl = [
+        "static/image/335421_gtFine_labelColors.png",
+        "static/image/267906_gtFine_labelColors.png",
+        "static/image/506316_gtFine_labelColors.png",
+        "static/image/394470_gtFine_labelColors.png",
+        "static/image/405836_gtFine_labelColors.png",
+        "static/image/405835_gtFine_labelColors.png"
+    ];
+    var xss = Math.floor((Math.random() * 6)+ 0);
+    console.log(xss);
+    $('.canvas').css('background-image', 'url(' + imageUrl[xss] + ')');
+
+    //toolbar code
+    $('#myTabs a').click(function (e) {
+        e.preventDefault();
+        $(this).tab('show');
+        console.log(this.id);
+        if(this.id === "auto-tab")
+            toolSelect = tools;
+        if(this.id === "bike-tab")
+            toolSelect = tools2;
+        if(this.id === "car-tab")
+            toolSelect = tools3;
+        if(this.id === "person-tab")
+            toolSelect = tools4;
+        if(this.id === "tree-tab")
+            toolSelect = tools5;
+        toolbarSec();
+    });
+    var $toolbar = $(".toolbar");
+    function toolbarSec() {
+        //generate toolbar
+
+        $(".toolbar").html("");
+        $.each(toolSelect, function (i, tool) {
+            $("<img>", tool).appendTo($toolbar);
+        });
+        var $tool = $toolbar.find("img");
+    }
+
+    //drag drop and resize
+    $("img.resizable").mousedown(function(event){
+        if(event.button == 2){
+            $(this).remove();
+        }
+        console.log(this);
+        switch (event.which) {
+            case 1:
+                alert('Left mouse button is pressed');
+                break;
+            case 2:
+                alert('Middle mouse button is pressed');
+                break;
+            case 3:
+                alert('Right mouse button is pressed');
+                break;
+            default:
+                alert('Nothing');
+        }
+    });
+
+    $toolbar.on("click", "img", onClick);
+    //handle commencement of drag
+   function onClick(e) {
+        // $(this).className += "resize-drag"
+        $o = 0;
+        $o = $(this).clone();
+        $o.attr("crossOrigin","null");
+        $o.addClass("resizable");
+        $(".canvas").append($o);
+        //$o.addClass("drag-drop");
+
+    };
+
+    interact('.resizable')
+      .draggable({
+        onmove: window.dragMoveListener,
+            modifiers: [
+              interact.modifiers.restrict({
+                restriction: 'parent',
+                elementRect: { top: 0, left: 0, bottom: 1, right: 1 }
+              })
+            ]
+      })
+      .resizable({
+        preserveAspectRatio: false,
+        edges: {
+          left: false,
+          right: true,
+          bottom: true,
+          top: false
+        }
+      })
+      .actionChecker(function (pointer, event, action, interactable) {
+            interactable.options.resize.preserveAspectRatio = event.shiftKey;
+            return action;
+        })
+      .on('dragstart', function (event) {
+        event.preventDefault();
+      })
+      .on('dragmove', dragMoveListener)
+      .on('resizestart', function(event) {
+        //console.info('resizestart = ', event);
+      })
+      .on('dblclick', function(event){
+           // if(event.button == 2)
+            event.target.remove();
+            // console.log(this);
+        })
+      .on('resizemove', function(event) {
+        //console.info('resizemove = ', event);
+        var target = event.target;
+        target.style.width  = event.rect.width + 'px';
+      });
+
+    // drag move listener called while image drag
+    function dragMoveListener(event) {
+      var target = event.target,
+        // keep the dragged position in the data-x/data-y attributes
+        x = (parseFloat(target.getAttribute('data-x')) || 0) + event.dx,
+        y = (parseFloat(target.getAttribute('data-y')) || 0) + event.dy;
+
+      // translate the element
+      target.style.webkitTransform =
+        target.style.transform =
+        'translate(' + x + 'px, ' + y + 'px)';
+
+      // update the posiion attributes
+      target.setAttribute('data-x', x);
+      target.setAttribute('data-y', y);
+    }
+
+    //};
+});
+
+//define toolset (JSON, e.g. from database)...
+var tools = [{
+    "data-id": 1,
+    alt: "Auto 1",
+    title: "Auto 1",
+    width: "80",
+    src: "static/image/clips/Auto/a1.png",
+    "data-description": "Straight in photo"
+}, {
+    "data-id": 2,
+    alt: "Auto 2",
+    title: "Auto 2",
+    width: "80",
+    src: "static/image/clips/Auto/a2.png",
+    "data-description": "snow in photo"
+}, {
+    "data-id": 3,
+    alt: "Auto 3",
+    title: "Auto 3",
+    width: "80",
+    src: "static/image/clips/Auto/a3.png",
+    "data-description": "straight far in photo"
+}, {
+    "data-id": 4,
+    alt: "Auto 4",
+    title: "Auto 4",
+    width: "80",
+    src: "static/image/clips/Auto/a4.png",
+    "data-description": "Bigger auto in photo"
+}, {
+    "data-id": 5,
+    alt: "Auto 5",
+    title: "Auto 5",
+    width: "80",
+    src: "static/image/clips/Auto/a5.png",
+    "data-description": "rain in photo"
+}];
+
+//define toolset (JSON, e.g. from database)...
+var tools2 = [{
+    "data-id": 1,
+    alt: "Bike 1",
+    title: "Bike 1",
+    width: "80",
+    src: "static/image/clips/Bike/b1.png",
+    "data-description": "Straight in photo"
+}, {
+    "data-id": 2,
+    alt: "Bike 2",
+    title: "Bike 2",
+    width: "80",
+    src: "static/image/clips/Bike/b2.png",
+    "data-description": "snow in photo"
+}, {
+    "data-id": 3,
+    alt: "Bike 3",
+    title: "Bike 3",
+    width: "80",
+    src: "static/image/clips/Bike/b3.png",
+    "data-description": "straight far in photo"
+}, {
+    "data-id": 4,
+    alt: "Bike 4",
+    title: "Bike 4",
+    width: "80",
+    src: "static/image/clips/Bike/b4.png",
+    "data-description": "Bigger auto in photo"
+}, {
+    "data-id": 5,
+    alt: "Bike 5",
+    title: "Bike 5",
+    width: "80",
+    src: "static/image/clips/Bike/b5.png",
+    "data-description": "rain in photo"
+}];
+
+//define toolset (JSON, e.g. from database)...
+var tools3 = [{
+    "data-id": 1,
+    alt: "Caravan",
+    title: "Caravan",
+    width: "80",
+    src: "static/image/clips/Car/c1.png",
+    "data-description": "Straight in photo"
+}, {
+    "data-id": 2,
+    alt: "Car 1",
+    title: "Car 1",
+    width: "80",
+    src: "static/image/clips/Car/c2.png",
+    "data-description": "snow in photo"
+}, {
+    "data-id": 3,
+    alt: "Car 2",
+    title: "Car 2",
+    width: "80",
+    src: "static/image/clips/Car/c3.png",
+    "data-description": "straight far in photo"
+}, {
+    "data-id": 4,
+    alt: "Car 3",
+    title: "Car 3",
+    width: "80",
+    src: "static/image/clips/Car/c4.png",
+    "data-description": "Bigger auto in photo"
+}, {
+    "data-id": 5,
+    alt: "Car 4",
+    title: "Car 4",
+    width: "80",
+    src: "static/image/clips/Car/c5.png",
+    "data-description": "rain in photo"
+}];
+
+//define toolset (JSON, e.g. from database)...
+var tools4 = [{
+    "data-id": 1,
+    alt: "Person 1",
+    title: "Person 1",
+    width: "80",
+    src: "static/image/clips/Person/p1.png",
+    "data-description": "Straight in photo"
+}, {
+    "data-id": 2,
+    alt: "Person 2",
+    title: "Person 2",
+    width: "60",
+    src: "static/image/clips/Person/p2.png",
+    "data-description": "snow in photo"
+}, {
+    "data-id": 3,
+    alt: "Person 3",
+    title: "Person 3",
+    width: "80",
+    src: "static/image/clips/Person/p3.png",
+    "data-description": "straight far in photo"
+}, {
+    "data-id": 4,
+    alt: "Person 4",
+    title: "Person 4",
+    width: "80",
+    src: "static/image/clips/Person/p4.png",
+    "data-description": "Bigger auto in photo"
+}, {
+    "data-id": 5,
+    alt: "Person 5",
+    title: "Person 5",
+    width: "80",
+    src: "static/image/clips/Person/p5.png",
+    "data-description": "rain in photo"
+}];
+
+//define toolset (JSON, e.g. from database)...
+var tools5 = [{
+    "data-id": 1,
+    alt: "Tree 1",
+    title: "Tree 1",
+    width: "80",
+    src: "static/image/clips/Tree/t1.png",
+    "data-description": "Straight in photo"
+}, {
+    "data-id": 2,
+    alt: "Tree 2",
+    title: "Tree 2",
+    width: "80",
+    src: "static/image/clips/Tree/t2.png",
+    "data-description": "snow in photo"
+}, {
+    "data-id": 3,
+    alt: "Tree 3",
+    title: "Tree 3",
+    width: "80",
+    src: "static/image/clips/Tree/t3.png",
+    "data-description": "straight far in photo"
+}, {
+    "data-id": 4,
+    alt: "Tree 4",
+    title: "Tree 4",
+    width: "80",
+    src: "static/image/clips/Tree/t4.png",
+    "data-description": "Bigger auto in photo"
+}, {
+    "data-id": 5,
+    alt: "Tree 5",
+    title: "Tree 5",
+    width: "80",
+    src: "static/image/clips/Tree/t5.png",
+    "data-description": "rain in photo"
+}];
+	</script>
+</body>
+</html>

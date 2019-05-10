@@ -1,0 +1,59 @@
+/* prevent users from selecting text in draggable items */
+[draggable] {
+    -moz-user-select: none;
+    -khtml-user-select: none;
+    -webkit-user-select: none;
+    user-select: none;
+}
+.toolbar span, .toolbar2 span {
+    display:inline-block;
+    float:left;
+}
+.toolbar img, .toolbar2 img {
+    margin: 10px;
+}
+
+.canvas {
+    position:relative;
+    height:288px;
+    width:512px;
+    background:white no-repeat;
+    background-size: 512px auto;
+    padding: 0;
+    margin: 0;
+}
+.canvas img {
+    position:absolute;
+    touch-action: none;
+}
+.cnv-bdr{
+    border: 15px grey solid;
+    display: inline-block;
+    margin: 0 auto;
+}
+#img-out canvas{
+    height: auto !important;
+    width: auto !important;
+    border: 15px grey solid;
+    display: inline-block;
+    margin: 0 auto;
+}
+#img-out img{
+    height: auto !important;
+    width: auto !important;
+    border: 15px grey solid;
+    display: inline-block;
+    margin: 0 auto;
+}
+#img-out{
+
+}
+.canvas2 {
+    position:relative;
+    height:512px;
+    width:512px;
+    /*background:Yellow url("http://www.mapstop.co.uk/images/uploaded/lrg_wg2668.6a40d0d.jpg") no-repeat;*/
+}
+.canvas2 img {
+    position:absolute;
+}
